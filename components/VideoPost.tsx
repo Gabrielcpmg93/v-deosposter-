@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Heart, MessageCircle, Share2, Music, Plus, Loader2, Play, Volume2, VolumeX } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Music, Plus, Loader2, Play, Volume2, VolumeX, AlertCircle } from 'lucide-react';
 import { VideoData } from '../types';
 
 interface VideoPostProps {
@@ -17,12 +17,25 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
   const [likeAnimation, setLikeAnimation] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout>;
+
     if (isActive) {
       setIsLoading(true);
+      setHasError(false);
       const videoEl = videoRef.current;
       
+      // Safety: Force stop loading after 2.5 seconds if video hasn't started
+      timeoutId = setTimeout(() => {
+          if (isLoading) {
+              console.log("Force removing loader due to timeout");
+              setIsLoading(false);
+              // Do not set isPlaying to true here, wait for user interaction
+          }
+      }, 2500);
+
       if (videoEl) {
         videoEl.currentTime = 0;
         const playPromise = videoEl.play();
@@ -35,7 +48,6 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
                 })
                 .catch((error) => {
                     console.log('Autoplay blocked or waiting for interaction', error);
-                    // Critical fix: remove loading screen even if autoplay fails
                     setIsLoading(false);
                     setIsPlaying(false);
                 });
@@ -49,6 +61,10 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
       setIsPlaying(false);
       setIsLoading(true); 
     }
+
+    return () => {
+        if (timeoutId) clearTimeout(timeoutId);
+    }
   }, [isActive]);
 
   const togglePlay = () => {
@@ -57,13 +73,24 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
             videoRef.current.pause();
             setIsPlaying(false);
         } else {
-            videoRef.current.play();
-            setIsPlaying(true);
+            // Reset error on manual retry
+            setHasError(false);
+            const p = videoRef.current.play();
+            if (p !== undefined) {
+                p.then(() => {
+                    setIsPlaying(true);
+                    setIsLoading(false);
+                }).catch(e => {
+                    console.error("Play failed", e);
+                    setIsPlaying(false);
+                });
+            }
         }
     }
   };
 
-  const handleLike = () => {
+  const handleLike = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setIsLiked(!isLiked);
     setLikeCount(prev => isLiked ? prev - 1 : prev + 1);
     
@@ -84,40 +111,58 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
   };
 
   return (
-    <div className="relative w-full h-full bg-white snap-start overflow-hidden">
+    <div 
+        className="relative w-full h-full bg-white snap-start overflow-hidden cursor-pointer"
+        onClick={togglePlay}
+    >
       
-      {/* Modern White Loading Screen */}
-      {isLoading && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-white">
+      {/* Loading Screen - visible when isLoading is true */}
+      {isLoading && !hasError && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-white pointer-events-none">
            <Loader2 className="w-8 h-8 text-black animate-spin mb-3" />
-           <p className="text-gray-500 text-xs font-medium tracking-wide uppercase">Carregando vídeo...</p>
+           <p className="text-gray-500 text-xs font-medium tracking-wide uppercase">Carregando...</p>
         </div>
+      )}
+
+      {/* Error State */}
+      {hasError && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-gray-50">
+              <AlertCircle className="w-10 h-10 text-gray-400 mb-2" />
+              <p className="text-gray-500 text-sm">Erro ao carregar vídeo</p>
+              <button className="mt-4 px-4 py-2 bg-black text-white text-xs rounded-full">Tentar novamente</button>
+          </div>
       )}
 
       {/* Video */}
       <video
         ref={videoRef}
         src={video.url}
-        className="relative w-full h-full object-cover z-0 cursor-pointer"
+        className="relative w-full h-full object-cover z-0"
         loop
         muted={isMuted}
         playsInline
-        onClick={togglePlay}
         onDoubleClick={handleDoubleTap}
         onWaiting={() => {
+            // Only show loader if we are expecting to play
             if (isActive && isPlaying) setIsLoading(true);
         }}
         onPlaying={() => {
             setIsLoading(false);
             setIsPlaying(true);
+            setHasError(false);
         }}
         onLoadedData={() => {
             if (isActive) setIsLoading(false);
         }}
+        onError={(e) => {
+            console.error("Video error:", e);
+            setIsLoading(false);
+            setHasError(true);
+        }}
       />
 
       {/* Play Icon Overlay (when paused and not loading) */}
-      {!isPlaying && !isLoading && (
+      {!isPlaying && !isLoading && !hasError && (
          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
              <div className="bg-black/30 p-5 rounded-full backdrop-blur-sm animate-pulse">
                 <Play size={40} className="text-white fill-white ml-1" />
@@ -141,7 +186,7 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
       )}
 
       {/* Side Actions */}
-      <div className="absolute right-2 bottom-32 flex flex-col items-center gap-6 z-20">
+      <div className="absolute right-2 bottom-32 flex flex-col items-center gap-6 z-20" onClick={(e) => e.stopPropagation()}>
         
         {/* Profile */}
         <div className="relative mb-2">

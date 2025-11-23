@@ -41,7 +41,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="w-full h-screen bg-white flex flex-col overflow-hidden font-sans text-black">
+    <div className="w-full h-[100dvh] bg-white flex flex-col overflow-hidden font-sans text-black">
       <div className="flex-1 relative overflow-hidden">
         {renderContent()}
       </div>
