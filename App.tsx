@@ -16,22 +16,22 @@ const App: React.FC = () => {
         return <UploadModal onClose={() => setCurrentView(ViewState.FEED)} />;
       case ViewState.PROFILE:
         return (
-            <div className="w-full h-full flex flex-col bg-black text-white p-6 pt-20 overflow-y-auto">
+            <div className="w-full h-full flex flex-col bg-white text-black p-6 pt-20 overflow-y-auto">
                 <div className="flex flex-col items-center mb-8">
-                    <img src={CURRENT_USER.avatarUrl} className="w-24 h-24 rounded-full mb-4 border-2 border-gray-700" />
+                    <img src={CURRENT_USER.avatarUrl} className="w-24 h-24 rounded-full mb-4 border-2 border-gray-100 p-1 shadow-sm" />
                     <h1 className="text-xl font-bold">@{CURRENT_USER.username}</h1>
                     <div className="flex gap-8 mt-6">
-                        <div className="text-center"><div className="font-bold">142</div><div className="text-xs text-gray-400">Following</div></div>
-                        <div className="text-center"><div className="font-bold">10.5k</div><div className="text-xs text-gray-400">Followers</div></div>
-                        <div className="text-center"><div className="font-bold">45k</div><div className="text-xs text-gray-400">Likes</div></div>
+                        <div className="text-center"><div className="font-bold text-lg">142</div><div className="text-xs text-gray-500 font-medium">Following</div></div>
+                        <div className="text-center"><div className="font-bold text-lg">10.5k</div><div className="text-xs text-gray-500 font-medium">Followers</div></div>
+                        <div className="text-center"><div className="font-bold text-lg">45k</div><div className="text-xs text-gray-500 font-medium">Likes</div></div>
                     </div>
-                    <button className="mt-6 px-8 py-2 bg-gray-800 rounded-sm font-semibold text-sm">Edit profile</button>
+                    <button className="mt-6 px-8 py-2.5 border border-gray-300 rounded-md font-semibold text-sm hover:bg-gray-50 transition-colors">Edit profile</button>
                 </div>
-                <div className="border-t border-gray-800 pt-4 grid grid-cols-3 gap-1">
-                     <div className="aspect-[3/4] bg-gray-800"></div>
-                     <div className="aspect-[3/4] bg-gray-800"></div>
-                     <div className="aspect-[3/4] bg-gray-800"></div>
-                     <div className="aspect-[3/4] bg-gray-800"></div>
+                <div className="border-t border-gray-200 pt-4 grid grid-cols-3 gap-1">
+                     <div className="aspect-[3/4] bg-gray-200"></div>
+                     <div className="aspect-[3/4] bg-gray-200"></div>
+                     <div className="aspect-[3/4] bg-gray-200"></div>
+                     <div className="aspect-[3/4] bg-gray-200"></div>
                 </div>
             </div>
         );
@@ -41,7 +41,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="w-full h-screen bg-black flex flex-col overflow-hidden font-sans">
+    <div className="w-full h-screen bg-white flex flex-col overflow-hidden font-sans text-black">
       <div className="flex-1 relative overflow-hidden">
         {renderContent()}
       </div>

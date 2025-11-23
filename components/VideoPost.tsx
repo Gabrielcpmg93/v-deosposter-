@@ -19,15 +19,28 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
 
   useEffect(() => {
     if (isActive) {
+      setIsLoading(true);
       // Small timeout to ensure seamless scroll completion before playing
       const timeout = setTimeout(() => {
-        videoRef.current?.play().catch(e => console.log('Autoplay blocked', e));
+        const playPromise = videoRef.current?.play();
+        if (playPromise !== undefined) {
+            playPromise
+                .then(() => {
+                    // Automatic playback started!
+                    setIsLoading(false);
+                })
+                .catch((error) => {
+                    console.log('Autoplay blocked or waiting for interaction', error);
+                    // Even if blocked, we stop loading visually to show the poster/first frame if available
+                    // But here we want to show loading until data is ready
+                });
+        }
       }, 100);
       return () => clearTimeout(timeout);
     } else {
       videoRef.current?.pause();
       if (videoRef.current) videoRef.current.currentTime = 0;
-      setIsLoading(true); // Reset loading state when scrolling away usually
+      setIsLoading(true); 
     }
   }, [isActive]);
 
@@ -51,12 +64,13 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
   };
 
   return (
-    <div className="relative w-full h-full bg-black snap-start overflow-hidden">
+    <div className="relative w-full h-full bg-white snap-start overflow-hidden">
       
-      {/* Loading Spinner */}
+      {/* Modern White Loading Screen */}
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center z-0 bg-gray-900">
-           <Loader2 className="w-10 h-10 text-white animate-spin opacity-50" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-white">
+           <Loader2 className="w-8 h-8 text-black animate-spin mb-3" />
+           <p className="text-gray-500 text-xs font-medium tracking-wide uppercase">Carregando vídeo...</p>
         </div>
       )}
 
@@ -64,7 +78,7 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
       <video
         ref={videoRef}
         src={video.url}
-        poster={video.thumbnailUrl}
+        // Removed poster to show white loading screen instead
         className="relative w-full h-full object-cover z-0"
         loop
         muted={isMuted}
@@ -73,7 +87,10 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
         onDoubleClick={handleDoubleTap}
         onWaiting={() => setIsLoading(true)}
         onPlaying={() => setIsLoading(false)}
-        onLoadedData={() => setIsLoading(false)}
+        onLoadedData={() => {
+            // Can start playing
+            if (isActive) setIsLoading(false);
+        }}
       />
 
       {/* Mute Indicator overlay if muted and clicked */}
@@ -90,15 +107,15 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
         </div>
       )}
 
-      {/* Side Actions */}
+      {/* Side Actions - Kept white for visibility over video content */}
       <div className="absolute right-2 bottom-32 flex flex-col items-center gap-6 z-20">
         
         {/* Profile */}
         <div className="relative mb-2">
-          <div className="w-12 h-12 rounded-full border-2 border-white p-[1px] overflow-hidden">
+          <div className="w-12 h-12 rounded-full border-2 border-white p-[1px] overflow-hidden shadow-lg">
             <img src={video.user.avatarUrl} className="w-full h-full rounded-full object-cover" alt="User" />
           </div>
-          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-red-500 rounded-full p-0.5 text-white">
+          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-red-500 rounded-full p-0.5 text-white shadow-sm">
             <Plus size={12} />
           </div>
         </div>
@@ -108,7 +125,7 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
           <button onClick={handleLike} className="active:scale-90 transition-transform">
             <Heart 
                 size={32} 
-                className={`transition-colors duration-300 ${isLiked ? 'text-red-500 fill-red-500' : 'text-white drop-shadow-lg'}`} 
+                className={`transition-colors duration-300 drop-shadow-lg ${isLiked ? 'text-red-500 fill-red-500' : 'text-white'}`} 
             />
           </button>
           <span className="text-white text-xs font-semibold drop-shadow-md">{likeCount.toLocaleString()}</span>
@@ -132,19 +149,19 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
 
         {/* Spinning Disc (Sound) */}
         <div className="mt-4 animate-[spin_4s_linear_infinite] relative">
-           <div className="w-10 h-10 rounded-full bg-gray-900 border-4 border-gray-800 flex items-center justify-center overflow-hidden">
+           <div className="w-10 h-10 rounded-full bg-black border-[3px] border-gray-800 flex items-center justify-center overflow-hidden">
              <img src={video.user.avatarUrl} className="w-6 h-6 rounded-full object-cover" />
            </div>
-           <div className="absolute -right-2 -bottom-2 text-gray-200">
+           <div className="absolute -right-2 -bottom-2 text-white drop-shadow-md">
                <Music size={12} />
            </div>
         </div>
       </div>
 
-      {/* Bottom Info */}
-      <div className="absolute bottom-16 left-0 w-full p-4 pr-16 bg-gradient-to-t from-black/60 to-transparent z-10">
-        <h3 className="font-bold text-white text-lg mb-2">@{video.user.username}</h3>
-        <p className="text-white/90 text-sm mb-2 line-clamp-2">
+      {/* Bottom Info - Gradient for readability */}
+      <div className="absolute bottom-16 left-0 w-full p-4 pr-16 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-10">
+        <h3 className="font-bold text-white text-lg mb-2 drop-shadow-md">@{video.user.username}</h3>
+        <p className="text-white/95 text-sm mb-2 line-clamp-2 drop-shadow-sm font-medium">
             {video.description}
         </p>
         <div className="flex items-center gap-2">
