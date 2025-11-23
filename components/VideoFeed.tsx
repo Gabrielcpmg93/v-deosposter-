@@ -6,7 +6,8 @@ import { TopNav } from './Navbar';
 
 const VideoFeed: React.FC = () => {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
-  const [isMuted, setIsMuted] = useState(true);
+  // Changed to false to attempt playing sound immediately (Optimistic Autoplay)
+  const [isMuted, setIsMuted] = useState(false);
   const [commentModalVideoId, setCommentModalVideoId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 

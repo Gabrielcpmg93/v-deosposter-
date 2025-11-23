@@ -19,18 +19,22 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasError, setHasError] = useState(false);
 
+  // Synchronize muted state with prop
+  useEffect(() => {
+    if (videoRef.current) {
+        videoRef.current.muted = isMuted;
+    }
+  }, [isMuted]);
+
   useEffect(() => {
     let timeoutId: ReturnType<typeof setTimeout>;
 
     if (isActive) {
-      // Don't reset loading to true immediately if we have a poster, 
-      // allows for smoother transition. But we do need to check play status.
       setIsLoading(true);
       setHasError(false);
       const videoEl = videoRef.current;
       
-      // Safety: Force stop loading after 2.5 seconds if video hasn't started
-      // This prevents the "infinite loading"
+      // Safety timeout
       timeoutId = setTimeout(() => {
           if (isLoading) {
               console.log("Force removing loader due to timeout");
@@ -40,6 +44,8 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
 
       if (videoEl) {
         videoEl.currentTime = 0;
+        videoEl.muted = isMuted; // Set initial mute state based on prop
+        
         const playPromise = videoEl.play();
         
         if (playPromise !== undefined) {
@@ -50,9 +56,27 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
                 })
                 .catch((error) => {
                     console.log('Autoplay blocked or waiting for interaction', error);
-                    // Critical: If blocked, stop loading so user sees the Play button
-                    setIsLoading(false);
-                    setIsPlaying(false);
+                    
+                    // SMART RECOVERY FOR AUTOPLAY POLICY
+                    if (error.name === 'NotAllowedError') {
+                        // Browser blocked sound. We MUST mute to play video.
+                        // We do not change the UI 'isMuted' state (keep it showing Sound On if it was on),
+                        // but we physically mute the element to allow playback.
+                        videoEl.muted = true;
+                        videoEl.play().then(() => {
+                            setIsLoading(false);
+                            setIsPlaying(true);
+                            console.log('Recovered from autoplay block by muting');
+                        }).catch(() => {
+                            // Total failure
+                            setIsLoading(false);
+                            setIsPlaying(false);
+                        });
+                    } else {
+                        // Other errors (network, format)
+                        setIsLoading(false);
+                        setIsPlaying(false);
+                    }
                 });
         }
       }
@@ -62,7 +86,6 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
         videoRef.current.currentTime = 0;
       }
       setIsPlaying(false);
-      // We don't necessarily need to show loader for inactive videos
     }
 
     return () => {
@@ -140,7 +163,6 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
         poster={video.thumbnailUrl}
         className="relative w-full h-full object-cover z-0"
         loop
-        muted={isMuted}
         playsInline
         onDoubleClick={handleDoubleTap}
         onWaiting={() => {
