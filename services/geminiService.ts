@@ -5,13 +5,23 @@ let ai: GoogleGenAI | null = null;
 const getAIClient = () => {
   if (ai) return ai;
   
-  // Safe access to process.env to prevent ReferenceError in browser environments
-  const apiKey = (typeof process !== 'undefined' && process.env && process.env.API_KEY) ? process.env.API_KEY : '';
-  
-  if (!apiKey) {
-      console.warn("API Key is missing for Gemini");
+  let apiKey = '';
+  try {
+      // Robustly check for process.env availability to avoid ReferenceErrors
+      // @ts-ignore
+      if (typeof process !== 'undefined' && process && process.env) {
+          // @ts-ignore
+          apiKey = process.env.API_KEY || '';
+      }
+  } catch (e) {
+      console.warn("Could not access process.env", e);
   }
   
+  if (!apiKey) {
+      console.warn("API Key is missing for Gemini. AI features will be disabled.");
+  }
+  
+  // Initialize with the key (or empty string if missing, handled by lib)
   ai = new GoogleGenAI({ apiKey });
   return ai;
 };
@@ -19,7 +29,6 @@ const getAIClient = () => {
 export const generateAIComment = async (videoDescription: string, mood: string): Promise<string> => {
   try {
     const client = getAIClient();
-    // Check if client actually has a key (internal check usually throws if empty, but we catch)
     
     const prompt = `You are a social media user watching a video with the description: "${videoDescription}". 
     Generate a short, engaging, and informal comment (max 15 words) that matches this mood: ${mood}. 

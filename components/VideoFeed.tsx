@@ -29,7 +29,7 @@ const VideoFeed: React.FC = () => {
   const toggleMute = () => setIsMuted(!isMuted);
 
   return (
-    <div className="relative w-full h-full bg-white">
+    <div className="relative w-full h-full bg-black">
       <TopNav />
       
       <div 

@@ -23,18 +23,20 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
     let timeoutId: ReturnType<typeof setTimeout>;
 
     if (isActive) {
+      // Don't reset loading to true immediately if we have a poster, 
+      // allows for smoother transition. But we do need to check play status.
       setIsLoading(true);
       setHasError(false);
       const videoEl = videoRef.current;
       
-      // Safety: Force stop loading after 3 seconds if video hasn't started
-      // This prevents the "infinite loading white screen"
+      // Safety: Force stop loading after 2.5 seconds if video hasn't started
+      // This prevents the "infinite loading"
       timeoutId = setTimeout(() => {
           if (isLoading) {
               console.log("Force removing loader due to timeout");
               setIsLoading(false);
           }
-      }, 3000);
+      }, 2500);
 
       if (videoEl) {
         videoEl.currentTime = 0;
@@ -48,6 +50,7 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
                 })
                 .catch((error) => {
                     console.log('Autoplay blocked or waiting for interaction', error);
+                    // Critical: If blocked, stop loading so user sees the Play button
                     setIsLoading(false);
                     setIsPlaying(false);
                 });
@@ -59,7 +62,7 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
         videoRef.current.currentTime = 0;
       }
       setIsPlaying(false);
-      setIsLoading(true); 
+      // We don't necessarily need to show loader for inactive videos
     }
 
     return () => {
@@ -73,7 +76,6 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
             videoRef.current.pause();
             setIsPlaying(false);
         } else {
-            // Reset error on manual retry
             setHasError(false);
             const p = videoRef.current.play();
             if (p !== undefined) {
@@ -101,7 +103,7 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
   };
 
   const handleDoubleTap = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent pausing on double tap
+    e.stopPropagation(); 
     if (!isLiked) {
         setIsLiked(true);
         setLikeCount(prev => prev + 1);
@@ -116,27 +118,26 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
         onClick={togglePlay}
     >
       
-      {/* Loading Screen - visible when isLoading is true */}
+      {/* Loading Screen - Now transparent over the poster image */}
       {isLoading && !hasError && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-white text-black pointer-events-none transition-opacity duration-300">
-           <Loader2 className="w-8 h-8 animate-spin mb-3 text-black" />
-           <p className="text-gray-500 text-xs font-medium tracking-wide uppercase">Carregando...</p>
+        <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-black/20 backdrop-blur-[2px] text-white pointer-events-none transition-opacity duration-300">
+           <Loader2 className="w-8 h-8 animate-spin mb-3 text-white/80" />
         </div>
       )}
 
       {/* Error State */}
       {hasError && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-gray-50">
+          <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-black text-white">
               <AlertCircle className="w-10 h-10 text-gray-400 mb-2" />
-              <p className="text-gray-500 text-sm">Erro ao carregar vídeo</p>
-              <button className="mt-4 px-4 py-2 bg-black text-white text-xs rounded-full">Tentar novamente</button>
+              <p className="text-gray-400 text-sm">Toque para tentar novamente</p>
           </div>
       )}
 
-      {/* Video */}
+      {/* Video with Poster (Thumbnail) fallback */}
       <video
         ref={videoRef}
         src={video.url}
+        poster={video.thumbnailUrl}
         className="relative w-full h-full object-cover z-0"
         loop
         muted={isMuted}
@@ -151,6 +152,7 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
             setHasError(false);
         }}
         onLoadedData={() => {
+            // Video data loaded enough to play
             if (isActive) setIsLoading(false);
         }}
         onError={(e) => {
@@ -163,7 +165,7 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
       {/* Play Icon Overlay (when paused and not loading) */}
       {!isPlaying && !isLoading && !hasError && (
          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
-             <div className="bg-black/30 p-5 rounded-full backdrop-blur-sm animate-pulse">
+             <div className="bg-black/40 p-5 rounded-full backdrop-blur-sm animate-pulse">
                 <Play size={40} className="text-white fill-white ml-1" />
              </div>
          </div>
@@ -184,7 +186,7 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
         </div>
       )}
 
-      {/* Side Actions - Added gradient background for visibility on light videos */}
+      {/* Side Actions */}
       <div className="absolute right-0 bottom-0 top-0 w-20 flex flex-col justify-end items-center gap-6 pb-32 pr-2 z-20 bg-gradient-to-l from-black/20 to-transparent pointer-events-none">
         <div className="pointer-events-auto flex flex-col items-center gap-6">
             {/* Profile */}
