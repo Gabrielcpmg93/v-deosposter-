@@ -27,14 +27,14 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
       setHasError(false);
       const videoEl = videoRef.current;
       
-      // Safety: Force stop loading after 2.5 seconds if video hasn't started
+      // Safety: Force stop loading after 3 seconds if video hasn't started
+      // This prevents the "infinite loading white screen"
       timeoutId = setTimeout(() => {
           if (isLoading) {
               console.log("Force removing loader due to timeout");
               setIsLoading(false);
-              // Do not set isPlaying to true here, wait for user interaction
           }
-      }, 2500);
+      }, 3000);
 
       if (videoEl) {
         videoEl.currentTime = 0;
@@ -112,14 +112,14 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
 
   return (
     <div 
-        className="relative w-full h-full bg-white snap-start overflow-hidden cursor-pointer"
+        className="relative w-full h-full bg-black snap-start overflow-hidden cursor-pointer"
         onClick={togglePlay}
     >
       
       {/* Loading Screen - visible when isLoading is true */}
       {isLoading && !hasError && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-white pointer-events-none">
-           <Loader2 className="w-8 h-8 text-black animate-spin mb-3" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-white text-black pointer-events-none transition-opacity duration-300">
+           <Loader2 className="w-8 h-8 animate-spin mb-3 text-black" />
            <p className="text-gray-500 text-xs font-medium tracking-wide uppercase">Carregando...</p>
         </div>
       )}
@@ -143,7 +143,6 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
         playsInline
         onDoubleClick={handleDoubleTap}
         onWaiting={() => {
-            // Only show loader if we are expecting to play
             if (isActive && isPlaying) setIsLoading(true);
         }}
         onPlaying={() => {
@@ -185,61 +184,63 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
         </div>
       )}
 
-      {/* Side Actions */}
-      <div className="absolute right-2 bottom-32 flex flex-col items-center gap-6 z-20" onClick={(e) => e.stopPropagation()}>
-        
-        {/* Profile */}
-        <div className="relative mb-2">
-          <div className="w-12 h-12 rounded-full border-2 border-white p-[1px] overflow-hidden shadow-lg">
-            <img src={video.user.avatarUrl} className="w-full h-full rounded-full object-cover" alt="User" />
-          </div>
-          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-red-500 rounded-full p-0.5 text-white shadow-sm">
-            <Plus size={12} />
-          </div>
-        </div>
+      {/* Side Actions - Added gradient background for visibility on light videos */}
+      <div className="absolute right-0 bottom-0 top-0 w-20 flex flex-col justify-end items-center gap-6 pb-32 pr-2 z-20 bg-gradient-to-l from-black/20 to-transparent pointer-events-none">
+        <div className="pointer-events-auto flex flex-col items-center gap-6">
+            {/* Profile */}
+            <div className="relative mb-2">
+            <div className="w-12 h-12 rounded-full border-2 border-white p-[1px] overflow-hidden shadow-lg bg-black">
+                <img src={video.user.avatarUrl} className="w-full h-full rounded-full object-cover" alt="User" />
+            </div>
+            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-red-500 rounded-full p-0.5 text-white shadow-sm border border-white">
+                <Plus size={12} />
+            </div>
+            </div>
 
-        {/* Like */}
-        <div className="flex flex-col items-center gap-1">
-          <button onClick={handleLike} className="active:scale-90 transition-transform">
-            <Heart 
-                size={32} 
-                className={`transition-colors duration-300 drop-shadow-lg ${isLiked ? 'text-red-500 fill-red-500' : 'text-white'}`} 
-            />
-          </button>
-          <span className="text-white text-xs font-semibold drop-shadow-md">{likeCount.toLocaleString()}</span>
-        </div>
+            {/* Like */}
+            <div className="flex flex-col items-center gap-1">
+            <button onClick={handleLike} className="active:scale-90 transition-transform p-1">
+                <Heart 
+                    size={32} 
+                    className={`transition-colors duration-300 drop-shadow-xl filter ${isLiked ? 'text-red-500 fill-red-500' : 'text-white'}`} 
+                    strokeWidth={2.5}
+                />
+            </button>
+            <span className="text-white text-xs font-bold drop-shadow-lg shadow-black">{likeCount.toLocaleString()}</span>
+            </div>
 
-        {/* Comment */}
-        <div className="flex flex-col items-center gap-1">
-          <button onClick={onOpenComments} className="active:scale-90 transition-transform">
-            <MessageCircle size={32} className="text-white drop-shadow-lg fill-white/10" />
-          </button>
-          <span className="text-white text-xs font-semibold drop-shadow-md">{video.comments}</span>
-        </div>
+            {/* Comment */}
+            <div className="flex flex-col items-center gap-1">
+            <button onClick={onOpenComments} className="active:scale-90 transition-transform p-1">
+                <MessageCircle size={32} className="text-white drop-shadow-xl fill-white/10" strokeWidth={2.5} />
+            </button>
+            <span className="text-white text-xs font-bold drop-shadow-lg shadow-black">{video.comments}</span>
+            </div>
 
-        {/* Share */}
-        <div className="flex flex-col items-center gap-1">
-          <button className="active:scale-90 transition-transform">
-            <Share2 size={32} className="text-white drop-shadow-lg fill-white/10" />
-          </button>
-          <span className="text-white text-xs font-semibold drop-shadow-md">{video.shares}</span>
-        </div>
+            {/* Share */}
+            <div className="flex flex-col items-center gap-1">
+            <button className="active:scale-90 transition-transform p-1">
+                <Share2 size={32} className="text-white drop-shadow-xl fill-white/10" strokeWidth={2.5} />
+            </button>
+            <span className="text-white text-xs font-bold drop-shadow-lg shadow-black">{video.shares}</span>
+            </div>
 
-        {/* Spinning Disc (Sound) */}
-        <div className={`mt-4 relative ${isPlaying ? 'animate-[spin_4s_linear_infinite]' : ''}`}>
-           <div className="w-10 h-10 rounded-full bg-black border-[3px] border-gray-800 flex items-center justify-center overflow-hidden">
-             <img src={video.user.avatarUrl} className="w-6 h-6 rounded-full object-cover" />
-           </div>
-           <div className="absolute -right-2 -bottom-2 text-white drop-shadow-md">
-               <Music size={12} />
-           </div>
+            {/* Spinning Disc (Sound) */}
+            <div className={`mt-4 relative ${isPlaying ? 'animate-[spin_4s_linear_infinite]' : ''}`}>
+            <div className="w-10 h-10 rounded-full bg-gray-900 border-[3px] border-gray-200 flex items-center justify-center overflow-hidden">
+                <img src={video.user.avatarUrl} className="w-6 h-6 rounded-full object-cover" />
+            </div>
+            <div className="absolute -right-2 -bottom-2 text-white drop-shadow-md">
+                <Music size={12} />
+            </div>
+            </div>
         </div>
       </div>
 
       {/* Bottom Info */}
-      <div className="absolute bottom-16 left-0 w-full p-4 pr-16 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-10 pointer-events-none">
+      <div className="absolute bottom-16 left-0 w-full p-4 pr-16 bg-gradient-to-t from-black/90 via-black/40 to-transparent z-10 pointer-events-none">
         <h3 className="font-bold text-white text-lg mb-2 drop-shadow-md">@{video.user.username}</h3>
-        <p className="text-white/95 text-sm mb-2 line-clamp-2 drop-shadow-sm font-medium">
+        <p className="text-white/95 text-sm mb-2 line-clamp-2 drop-shadow-sm font-medium leading-relaxed">
             {video.description}
         </p>
         <div className="flex items-center gap-2">

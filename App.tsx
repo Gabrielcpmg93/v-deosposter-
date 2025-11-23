@@ -41,12 +41,12 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="w-full h-[100dvh] bg-white flex flex-col overflow-hidden font-sans text-black">
-      <div className="flex-1 relative overflow-hidden">
+    <div className="w-full h-screen h-[100dvh] bg-black flex flex-col overflow-hidden font-sans text-black">
+      <div className="flex-1 relative overflow-hidden bg-white">
         {renderContent()}
       </div>
       
-      {/* Show Bottom Nav only on main screens, hide on full modals usually, but keeping it simple here */}
+      {/* Show Bottom Nav only on main screens */}
       {currentView !== ViewState.UPLOAD && (
          <BottomNav currentView={currentView} onChangeView={setCurrentView} />
       )}
