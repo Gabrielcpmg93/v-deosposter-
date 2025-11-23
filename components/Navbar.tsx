@@ -53,10 +53,10 @@ export const BottomNav: React.FC<NavbarProps> = ({ currentView, onChangeView }) 
 
 export const TopNav: React.FC = () => {
     return (
-        <div className="fixed top-0 left-0 w-full p-4 pt-6 z-40 flex justify-center items-center gap-4 text-sm font-bold text-white/70 pointer-events-none drop-shadow-md">
-            <span className="cursor-pointer pointer-events-auto hover:text-white transition-colors">Following</span>
-            <span className="text-white/40">|</span>
-            <span className="text-white cursor-pointer pointer-events-auto border-b-2 border-white pb-1">For You</span>
+        <div className="fixed top-0 left-0 w-full p-4 pt-6 z-40 flex justify-center items-center gap-4 text-sm font-bold bg-white/80 backdrop-blur-md border-b border-gray-100/50 shadow-sm transition-all">
+            <span className="cursor-pointer text-gray-400 hover:text-black transition-colors">Following</span>
+            <span className="text-gray-300">|</span>
+            <span className="text-black cursor-pointer border-b-2 border-black pb-1">For You</span>
         </div>
     )
 }

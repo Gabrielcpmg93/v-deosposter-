@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Heart, MessageCircle, Share2, Music, Plus, Loader2 } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Music, Plus, Loader2, Play, Volume2, VolumeX } from 'lucide-react';
 import { VideoData } from '../types';
 
 interface VideoPostProps {
@@ -16,33 +16,52 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
   const [likeCount, setLikeCount] = useState(video.likes);
   const [likeAnimation, setLikeAnimation] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
     if (isActive) {
       setIsLoading(true);
-      // Small timeout to ensure seamless scroll completion before playing
-      const timeout = setTimeout(() => {
-        const playPromise = videoRef.current?.play();
+      const videoEl = videoRef.current;
+      
+      if (videoEl) {
+        videoEl.currentTime = 0;
+        const playPromise = videoEl.play();
+        
         if (playPromise !== undefined) {
             playPromise
                 .then(() => {
-                    // Automatic playback started!
                     setIsLoading(false);
+                    setIsPlaying(true);
                 })
                 .catch((error) => {
                     console.log('Autoplay blocked or waiting for interaction', error);
-                    // Even if blocked, we stop loading visually to show the poster/first frame if available
-                    // But here we want to show loading until data is ready
+                    // Critical fix: remove loading screen even if autoplay fails
+                    setIsLoading(false);
+                    setIsPlaying(false);
                 });
         }
-      }, 100);
-      return () => clearTimeout(timeout);
+      }
     } else {
-      videoRef.current?.pause();
-      if (videoRef.current) videoRef.current.currentTime = 0;
+      if (videoRef.current) {
+        videoRef.current.pause();
+        videoRef.current.currentTime = 0;
+      }
+      setIsPlaying(false);
       setIsLoading(true); 
     }
   }, [isActive]);
+
+  const togglePlay = () => {
+    if (videoRef.current) {
+        if (isPlaying) {
+            videoRef.current.pause();
+            setIsPlaying(false);
+        } else {
+            videoRef.current.play();
+            setIsPlaying(true);
+        }
+    }
+  };
 
   const handleLike = () => {
     setIsLiked(!isLiked);
@@ -54,7 +73,8 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
     }
   };
 
-  const handleDoubleTap = () => {
+  const handleDoubleTap = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent pausing on double tap
     if (!isLiked) {
         setIsLiked(true);
         setLikeCount(prev => prev + 1);
@@ -78,27 +98,40 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
       <video
         ref={videoRef}
         src={video.url}
-        // Removed poster to show white loading screen instead
-        className="relative w-full h-full object-cover z-0"
+        className="relative w-full h-full object-cover z-0 cursor-pointer"
         loop
         muted={isMuted}
         playsInline
-        onClick={toggleMute}
+        onClick={togglePlay}
         onDoubleClick={handleDoubleTap}
-        onWaiting={() => setIsLoading(true)}
-        onPlaying={() => setIsLoading(false)}
+        onWaiting={() => {
+            if (isActive && isPlaying) setIsLoading(true);
+        }}
+        onPlaying={() => {
+            setIsLoading(false);
+            setIsPlaying(true);
+        }}
         onLoadedData={() => {
-            // Can start playing
             if (isActive) setIsLoading(false);
         }}
       />
 
-      {/* Mute Indicator overlay if muted and clicked */}
-      {isMuted && isActive && !isLoading && (
-         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/40 p-4 rounded-full pointer-events-none opacity-0 animate-fade-in-out z-30">
-            <span className="text-white font-bold">Unmute</span>
+      {/* Play Icon Overlay (when paused and not loading) */}
+      {!isPlaying && !isLoading && (
+         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+             <div className="bg-black/30 p-5 rounded-full backdrop-blur-sm animate-pulse">
+                <Play size={40} className="text-white fill-white ml-1" />
+             </div>
          </div>
       )}
+
+      {/* Mute Toggle Button */}
+      <button 
+        onClick={(e) => { e.stopPropagation(); toggleMute(); }}
+        className="absolute top-24 right-4 z-30 p-2.5 bg-black/20 rounded-full backdrop-blur-md border border-white/10 active:scale-90 transition-transform"
+      >
+         {isMuted ? <VolumeX size={20} className="text-white" /> : <Volume2 size={20} className="text-white" />}
+      </button>
 
       {/* Big Like Animation */}
       {likeAnimation && (
@@ -107,7 +140,7 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
         </div>
       )}
 
-      {/* Side Actions - Kept white for visibility over video content */}
+      {/* Side Actions */}
       <div className="absolute right-2 bottom-32 flex flex-col items-center gap-6 z-20">
         
         {/* Profile */}
@@ -148,7 +181,7 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
         </div>
 
         {/* Spinning Disc (Sound) */}
-        <div className="mt-4 animate-[spin_4s_linear_infinite] relative">
+        <div className={`mt-4 relative ${isPlaying ? 'animate-[spin_4s_linear_infinite]' : ''}`}>
            <div className="w-10 h-10 rounded-full bg-black border-[3px] border-gray-800 flex items-center justify-center overflow-hidden">
              <img src={video.user.avatarUrl} className="w-6 h-6 rounded-full object-cover" />
            </div>
@@ -158,8 +191,8 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
         </div>
       </div>
 
-      {/* Bottom Info - Gradient for readability */}
-      <div className="absolute bottom-16 left-0 w-full p-4 pr-16 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-10">
+      {/* Bottom Info */}
+      <div className="absolute bottom-16 left-0 w-full p-4 pr-16 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-10 pointer-events-none">
         <h3 className="font-bold text-white text-lg mb-2 drop-shadow-md">@{video.user.username}</h3>
         <p className="text-white/95 text-sm mb-2 line-clamp-2 drop-shadow-sm font-medium">
             {video.description}
@@ -167,7 +200,7 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
         <div className="flex items-center gap-2">
             <Music size={14} className="text-white" />
             <div className="overflow-hidden w-1/2">
-                <p className="text-white text-xs font-medium whitespace-nowrap animate-marquee">
+                <p className={`text-white text-xs font-medium whitespace-nowrap ${isPlaying ? 'animate-marquee' : ''}`}>
                     {video.songName} &nbsp; • &nbsp; {video.songName}
                 </p>
             </div>

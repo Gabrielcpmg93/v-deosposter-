@@ -22,8 +22,6 @@ const VideoFeed: React.FC = () => {
       }
     };
 
-    // Use a small debounce or just standard scroll listener
-    // Snap scroll handles the UI, this handles the logic state
     container.addEventListener('scroll', handleScroll);
     return () => container.removeEventListener('scroll', handleScroll);
   }, [currentVideoIndex]);
@@ -31,7 +29,7 @@ const VideoFeed: React.FC = () => {
   const toggleMute = () => setIsMuted(!isMuted);
 
   return (
-    <div className="relative w-full h-full bg-black">
+    <div className="relative w-full h-full bg-white">
       <TopNav />
       
       <div 
