@@ -1,0 +1,8 @@
+{
+  "name": "TikTok Clone AI",
+  "description": "A vertical video social network clone featuring infinite scroll, likes, comments, and AI-powered interaction suggestions.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
