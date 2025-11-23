@@ -15,7 +15,7 @@ export const generateAIComment = async (videoDescription: string, mood: string):
     Do not use hashtags. Just the text.`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.0-flash-exp',
       contents: prompt,
     });
 
@@ -31,7 +31,7 @@ export const generateVideoCaption = async (imageBase64: string): Promise<string>
 
     try {
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-2.0-flash-exp',
             contents: {
                 parts: [
                     {
