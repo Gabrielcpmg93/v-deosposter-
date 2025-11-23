@@ -17,6 +17,7 @@ export interface Comment {
 export interface VideoData {
   id: string;
   url: string;
+  thumbnailUrl: string;
   description: string;
   tags: string[];
   likes: number;

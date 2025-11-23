@@ -5,6 +5,7 @@ export const MOCK_VIDEOS: VideoData[] = [
     id: '1',
     // Nature / Waterfall
     url: 'https://assets.mixkit.co/videos/preview/mixkit-waterfall-in-forest-2213-large.mp4',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=1080&auto=format&fit=crop',
     description: 'Nature is amazing! 🌿 #nature #waterfall #peace',
     tags: ['nature', 'waterfall', 'travel'],
     likes: 1205,
@@ -21,6 +22,7 @@ export const MOCK_VIDEOS: VideoData[] = [
     id: '2',
     // Urban / City
     url: 'https://assets.mixkit.co/videos/preview/mixkit-night-sky-with-stars-at-a-calm-lake-time-lapse-1704-large.mp4',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=1080&auto=format&fit=crop',
     description: 'Starry nights ✨ #stars #nightsky #timelapse',
     tags: ['stars', 'night', 'chill'],
     likes: 8500,
@@ -37,6 +39,7 @@ export const MOCK_VIDEOS: VideoData[] = [
     id: '3',
     // Tech / Coding
     url: 'https://assets.mixkit.co/videos/preview/mixkit-man-working-on-his-laptop-308-large.mp4',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1587620962725-abab7fe55159?q=80&w=1080&auto=format&fit=crop',
     description: 'Late night coding sessions 💻 #coding #developer #react',
     tags: ['tech', 'programming', 'work'],
     likes: 4200,
@@ -53,6 +56,7 @@ export const MOCK_VIDEOS: VideoData[] = [
     id: '4',
     // Waves
     url: 'https://assets.mixkit.co/videos/preview/mixkit-waves-coming-to-the-beach-5016-large.mp4',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1080&auto=format&fit=crop',
     description: 'Ocean vibes 🌊 #ocean #beach #summer',
     tags: ['summer', 'vibes', 'sea'],
     likes: 15300,

@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Heart, MessageCircle, Share2, Music, Plus } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Music, Plus, Loader2 } from 'lucide-react';
 import { VideoData } from '../types';
 
 interface VideoPostProps {
@@ -15,6 +15,7 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(video.likes);
   const [likeAnimation, setLikeAnimation] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (isActive) {
@@ -26,6 +27,7 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
     } else {
       videoRef.current?.pause();
       if (videoRef.current) videoRef.current.currentTime = 0;
+      setIsLoading(true); // Reset loading state when scrolling away usually
     }
   }, [isActive]);
 
@@ -50,28 +52,40 @@ const VideoPost: React.FC<VideoPostProps> = ({ video, isActive, toggleMute, isMu
 
   return (
     <div className="relative w-full h-full bg-black snap-start overflow-hidden">
+      
+      {/* Loading Spinner */}
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center z-0 bg-gray-900">
+           <Loader2 className="w-10 h-10 text-white animate-spin opacity-50" />
+        </div>
+      )}
+
       {/* Video */}
       <video
         ref={videoRef}
         src={video.url}
-        className="w-full h-full object-cover"
+        poster={video.thumbnailUrl}
+        className="relative w-full h-full object-cover z-0"
         loop
         muted={isMuted}
         playsInline
         onClick={toggleMute}
         onDoubleClick={handleDoubleTap}
+        onWaiting={() => setIsLoading(true)}
+        onPlaying={() => setIsLoading(false)}
+        onLoadedData={() => setIsLoading(false)}
       />
 
       {/* Mute Indicator overlay if muted and clicked */}
-      {isMuted && isActive && (
-         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/40 p-4 rounded-full pointer-events-none opacity-0 animate-fade-in-out">
+      {isMuted && isActive && !isLoading && (
+         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/40 p-4 rounded-full pointer-events-none opacity-0 animate-fade-in-out z-30">
             <span className="text-white font-bold">Unmute</span>
          </div>
       )}
 
       {/* Big Like Animation */}
       {likeAnimation && (
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-30">
             <Heart size={120} className="text-red-500 fill-red-500 animate-bounce-in" />
         </div>
       )}
